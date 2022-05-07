@@ -1,6 +1,7 @@
 /**
  * Build styles
  */
+ import Tribute from "tributejs";
 import { extractContentAfterCaret, fragmentToHtml, make, getHTML, moveCaret } from './utils';
 
 import './index.css';
@@ -118,6 +119,7 @@ export default class Checklist {
      * Fill or create tool's data structure
      */
     this.data = data || {};
+    this.subMembers = config.subMembers
   }
 
   /**
@@ -188,8 +190,18 @@ export default class Checklist {
     let items = this.items.map((itemEl) => {
       const input = this.getItemInput(itemEl);
 
+      const elements = input.querySelectorAll('a')    
+      let members = []
+
+      elements.forEach(element => {
+        if(element.innerText.charAt(0) === '@') {
+          members.push(element.innerText.replace('@',''))
+        }
+      })    
+
       return {
         text: getHTML(input),
+        taggedMembers: members,
         checked: itemEl.classList.contains(this.CSS.itemChecked),
       };
     });
@@ -243,6 +255,20 @@ export default class Checklist {
       innerHTML: item.text ? item.text : '',
       contentEditable: !this.readOnly,
     });
+
+    var tribute = new Tribute({
+      collection:[{
+         values: this.subMembers,
+         menuItemTemplate: function (item) {
+           return `<img src=${item.original.avatar} width='30px' height='30px' style="border-radius:5px; margin-right:10px" alt='profile pic' /> <b>${item.original.value}</b>`;
+         },
+         selectTemplate: function (item) {     
+           return `<a href="#">@${item.original.value}</a>`
+         }
+     }]
+    });
+
+    tribute.attach(textField);
 
     if (item.checked) {
       checkListItem.classList.add(this.CSS.itemChecked);
